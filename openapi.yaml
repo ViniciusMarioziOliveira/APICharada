@@ -1,0 +1,224 @@
+openapi: 3.0.0
+info:
+  title: API de Charadas
+  description: API para gerenciamento de charadas com autenticação JWT
+  version: "33.550.336"
+  contact:
+    name: VNZ
+
+servers:
+  - url: http://localhost:5000
+    description: Servidor local
+  - url : https://api-charada-kepf.vercel.app/
+    description: Servidor de produção
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Charada:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        pergunta:
+          type: string
+          example: "O que é, o que é? Cai em pé e corre deitado?"
+        resposta:
+          type: string
+          example: "Chuva"
+
+    LoginRequest:
+      type: object
+      required: [usuario, senha]
+      properties:
+        usuario:
+          type: string
+          example: admin
+        senha:
+          type: string
+          example: 123456
+
+    LoginResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        token:
+          type: string
+
+paths:
+  /:
+    get:
+      summary: Rota de boas-vindas
+      responses:
+        "200":
+          description: API online
+
+  /login:
+    post:
+      summary: Login do administrador
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: Login realizado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        "401":
+          description: Usuário ou senha inválidos
+
+  /charadas:
+    get:
+      summary: Listar todas as charadas
+      responses:
+        "200":
+          description: Lista de charadas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Charada'
+
+    post:
+      summary: Criar nova charada
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pergunta, resposta]
+              properties:
+                pergunta:
+                  type: string
+                resposta:
+                  type: string
+      responses:
+        "201":
+          description: Charada criada com sucesso
+        "400":
+          description: Dados inválidos
+
+  /charadas/random:
+    get:
+      summary: Retorna uma charada aleatória
+      responses:
+        "200":
+          description: Charada aleatória
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Charada'
+
+  /charadas/{id}:
+    get:
+      summary: Buscar charada por ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Charada encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Charada'
+        "404":
+          description: Charada não encontrada
+
+    put:
+      summary: Atualizar completamente uma charada
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pergunta, resposta]
+              properties:
+                pergunta:
+                  type: string
+                resposta:
+                  type: string
+      responses:
+        "200":
+          description: Charada atualizada
+        "400":
+          description: Dados inválidos
+        "404":
+          description: Charada não encontrada
+
+    patch:
+      summary: Atualizar parcialmente uma charada
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pergunta:
+                  type: string
+                resposta:
+                  type: string
+      responses:
+        "200":
+          description: Charada atualizada
+        "400":
+          description: Dados inválidos
+        "404":
+          description: Charada não encontrada
+
+    delete:
+      summary: Deletar uma charada
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Charada deletada
+        "404":
+          description: Charada não encontrada
+
+tags:
+  - name: Autenticação
+  - name: Charadas
